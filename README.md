@@ -3,11 +3,12 @@
 An Employee Management System featuring both a desktop GUI (Swing) and a CLI menu, backed by Hibernate ORM and a MySQL database.
 
 ### Features
-- **CRUD employees**: create, read, update, delete
-- **Search**: by name (contains) and by ID
-- **Two UIs**:
-  - **GUI**: `com.example.ems.SwingApp` launches a Swing desktop app
-  - **CLI**: `com.example.ems.App` runs an interactive console menu
+- **Employees**: create, read, update, delete; search by name or ID
+- **Employment Records**: track start year and end year ("Present" if still employed)
+- **Deletion rule**: deleting an employee auto-sets all open records' end year to current year
+- **Two UIs** with startup chooser:
+  - **GUI**: `com.example.ems.SwingApp` launches a module chooser (Employees or Employment Records)
+  - **CLI**: `com.example.ems.App` runs an interactive console menu (employees)
 
 ### Tech Stack
 - **Language**: Java 17
@@ -27,7 +28,9 @@ src/
       SwingApp.java                 # GUI entry point (default exec)
       entity/Employee.java          # JPA entity
       repository/EmployeeRepository.java  # Data access (Hibernate Session API)
+      repository/EmploymentRecordRepository.java  # Save employment records
       ui/EmployeeManagementFrame.java     # Swing UI
+      ui/EmploymentRecordFrame.java       # Swing UI for employment records
       util/HibernateUtil.java       # SessionFactory bootstrap
     resources/hibernate.cfg.xml     # Hibernate + DB configuration
   test/java/com/example/AppTest.java
@@ -64,6 +67,8 @@ The `pom.xml` configures the executable main class as `com.example.ems.SwingApp`
 ```bash
 mvn exec:java
 ```
+On launch, a chooser dialog appears: pick **Employees** or **Employment Records**. Use the Back option in either screen to return to the chooser.
+
 Alternatively, run directly with `java` after building:
 ```bash
 mvn -DskipTests package
@@ -80,12 +85,20 @@ Common operations available in the menu:
 - Find employees by name (contains)
 
 ### Using the GUI
+- On start, select a module:
+  - **Employees**: manage employee records
+  - **Employment Records**: add employment tenure entries
+- Each screen includes a Back option to return to the chooser.
+
+Employees screen:
 - The top form lets you enter employee details (First/Last/Email/Department).
 - Table displays existing employees; selecting a row populates the form for editing.
-- Bottom actions:
-  - Add / Update / Delete
-  - Refresh
-  - Find by Name / Find by ID
+- Actions: Add / Update / Delete / Refresh / Find by Name / Find by ID / Back
+
+Employment Records screen:
+- Enter either Employee ID OR both First Name and Last Name.
+- Provide Start Year (required). Check "Still employed" to set end year to "Present" automatically; otherwise current year is used.
+- Saves only if the employee exists; exact name match is required when using names. If multiple matches, the UI asks to use the Employee ID.
 
 ### Entity Model
 `Employee` fields:
@@ -95,18 +108,31 @@ Common operations available in the menu:
 - `email` (required, unique)
 - `department`
 
+`EmploymentRecord` fields:
+- `id` (Long, auto-generated)
+- `employee` (Many-to-one to `Employee`)
+- `employeeName` (snapshot of name at record time)
+- `startYear` (Integer, required)
+- `endYear` (String: year like "2024" or the literal "Present" for ongoing employment)
+- Derived helpers: `getYearsWorked()`, `getPeriod()`
+
 ### Repository
 `EmployeeRepository` provides:
 - `save(Employee)`
 - `findById(Long)`
 - `findAll()`
 - `findByName(String)` — case-insensitive contains on first/last name
+- `findByFirstAndLast(String, String)` — exact case-insensitive match on first and last names
 - `update(Employee)`
 - `delete(Long)`
+
+`EmploymentRecordRepository` provides:
+- `save(EmploymentRecord)`
 
 ### Configuration Notes
 - SessionFactory is built via `HibernateUtil` using `hibernate.cfg.xml` on the classpath.
 - A JVM shutdown hook closes Hibernate when the GUI app exits.
+ - `hibernate.cfg.xml` maps both `Employee` and `EmploymentRecord`.
 
 ### Testing
 ```bash
@@ -117,6 +143,7 @@ mvn test
 - "Access denied" or connection errors: verify MySQL is running, DB exists, and credentials/URL in `hibernate.cfg.xml` are correct.
 - Schema issues: `hibernate.hbm2ddl.auto=update` should create/update the `employees` table automatically.
 - Port conflicts: ensure nothing else uses MySQL port 3306 or adjust the JDBC URL accordingly.
+ - Bulk update uses Hibernate 6 API (`createMutationQuery`) to avoid deprecations.
 
 ### Notes
 - The Maven `artifactId`/`name` in `pom.xml` currently say "grading-system" but the codebase is an Employee Management System. You may rename those fields if desired.
