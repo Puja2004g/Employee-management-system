@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 
 import java.util.List;
+import java.time.Year;
 
 public class EmployeeRepository {
     public Employee save(Employee employee) {
@@ -44,6 +45,17 @@ public class EmployeeRepository {
         }
     }
 
+    public List<Employee> findByFirstAndLast(String firstName, String lastName) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            return session.createQuery(
+                    "from Employee e where lower(e.firstName) = :first and lower(e.lastName) = :last",
+                    Employee.class)
+                .setParameter("first", firstName.toLowerCase())
+                .setParameter("last", lastName.toLowerCase())
+                .getResultList();
+        }
+    }
+
     public Employee update(Employee employee) {
         Transaction tx = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
@@ -63,6 +75,14 @@ public class EmployeeRepository {
             tx = session.beginTransaction();
             Employee managed = session.get(Employee.class, id);
             if (managed != null) {
+                // Close any open employment records for this employee by setting endYear to current year
+                int currentYear = Year.now().getValue();
+                session.createMutationQuery(
+                        "update EmploymentRecord r set r.endYear = :year where r.employee = :emp and (r.endYear is null or r.endYear = 'Present')")
+                        .setParameter("year", currentYear)
+                        .setParameter("emp", managed)
+                        .executeUpdate();
+
                 session.remove(managed);
             }
             tx.commit();

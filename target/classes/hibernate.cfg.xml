@@ -15,6 +15,7 @@
         <property name="hibernate.format_sql">true</property>
 
         <mapping class="com.example.ems.entity.Employee"/>
+        <mapping class="com.example.ems.entity.EmploymentRecord"/>
     </session-factory>
 </hibernate-configuration>
 

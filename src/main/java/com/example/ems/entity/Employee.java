@@ -6,6 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.OneToMany;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "employees")
@@ -25,6 +29,9 @@ public class Employee {
 
     @Column(length = 100)
     private String department;
+
+    @OneToMany(mappedBy = "employee")
+    private List<EmploymentRecord> employmentRecords = new ArrayList<>();
 
     public Employee() {
     }
@@ -70,6 +77,14 @@ public class Employee {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public List<EmploymentRecord> getEmploymentRecords() {
+        return employmentRecords;
+    }
+
+    public void setEmploymentRecords(List<EmploymentRecord> employmentRecords) {
+        this.employmentRecords = employmentRecords;
     }
 
     @Override

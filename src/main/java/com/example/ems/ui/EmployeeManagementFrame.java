@@ -2,6 +2,7 @@ package com.example.ems.ui;
 
 import com.example.ems.entity.Employee;
 import com.example.ems.repository.EmployeeRepository;
+import com.example.ems.SwingApp;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -12,6 +13,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
@@ -48,6 +52,7 @@ public class EmployeeManagementFrame extends JFrame {
     }
 
     private void buildUi() {
+        setJMenuBar(buildMenuBar());
         JPanel root = new JPanel(new BorderLayout(8, 8));
         root.add(buildFormPanel(), BorderLayout.NORTH);
         root.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -66,6 +71,16 @@ public class EmployeeManagementFrame extends JFrame {
                 }
             }
         });
+    }
+
+    private JMenuBar buildMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu nav = new JMenu("Navigation");
+        JMenuItem back = new JMenuItem("Back");
+        back.addActionListener(e -> onBack());
+        nav.add(back);
+        menuBar.add(nav);
+        return menuBar;
     }
 
     private JPanel buildFormPanel() {
@@ -102,6 +117,7 @@ public class EmployeeManagementFrame extends JFrame {
         JButton refreshBtn = new JButton("Refresh");
         JButton findByNameBtn = new JButton("Find by Name");
         JButton findByIdBtn = new JButton("Find by ID");
+        JButton backBtn = new JButton("Back");
 
         panel.add(new JLabel("Search Name:"));
         panel.add(searchNameField);
@@ -113,6 +129,7 @@ public class EmployeeManagementFrame extends JFrame {
         panel.add(updateBtn);
         panel.add(deleteBtn);
         panel.add(refreshBtn);
+        panel.add(backBtn);
 
         addBtn.addActionListener(e -> addEmployee());
         updateBtn.addActionListener(e -> updateEmployee());
@@ -120,6 +137,7 @@ public class EmployeeManagementFrame extends JFrame {
         refreshBtn.addActionListener(e -> refreshTable());
         findByNameBtn.addActionListener(e -> findByName());
         findByIdBtn.addActionListener(e -> findById());
+        backBtn.addActionListener(e -> onBack());
 
         return panel;
     }
@@ -237,6 +255,11 @@ public class EmployeeManagementFrame extends JFrame {
 
     public static void showUi() {
         SwingUtilities.invokeLater(() -> new EmployeeManagementFrame().setVisible(true));
+    }
+
+    private void onBack() {
+        dispose();
+        SwingApp.showModuleChooser();
     }
 }
 
